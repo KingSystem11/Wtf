@@ -2,6 +2,9 @@ const { EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, Ac
 const db = require('../utils/db');
 const { getEmoji } = require('../utils/emojis');
 
+// Track active whitelist sessions per guild and user to prevent overlapping
+const activeWhitelistSessions = new Map();
+
 module.exports = {
     name: 'whitelist',
     description: 'Manage whitelist entries using an interactive menu.',
@@ -11,6 +14,12 @@ module.exports = {
             if (!extraOwners.some(o => o.user_id === message.author.id)) {
                 return message.reply(`${getEmoji('ERROR')} Only the server owner or extra owners can manage the whitelist.`);
             }
+        }
+
+        // Check for existing active session
+        const sessionKey = `${message.guild.id}-${message.author.id}`;
+        if (activeWhitelistSessions.has(sessionKey)) {
+            return message.reply(`${getEmoji('WARN')} You already have an active whitelist session. Please complete or cancel it first.`);
         }
 
         const target = message.mentions.users.first() || (args[0] ? { id: args[0], tag: args[0] } : null);
@@ -46,11 +55,16 @@ module.exports = {
 
         const response = await message.reply({ embeds: [embed], components: [row1, row2] });
 
+        // Register active session
+        activeWhitelistSessions.set(sessionKey, true);
+
         const collector = response.createMessageComponentCollector({ time: 60000 });
         let selectedModules = [];
 
         collector.on('collect', async i => {
-            if (i.user.id !== message.author.id) return i.reply({ content: 'Not for you.', ephemeral: true });
+            if (i.user.id !== message.author.id) {
+                return i.reply({ content: `${getEmoji('ERROR')} Only <@${message.author.id}> can interact with this menu.`, ephemeral: true });
+            }
 
             if (i.customId === 'whitelist_modules') {
                 selectedModules = i.values.filter(v => v !== 'beast');
@@ -72,6 +86,46 @@ module.exports = {
             } else if (i.customId === 'whitelist_cancel') {
                 await i.update({ content: 'Whitelist setup cancelled.', embeds: [], components: [] });
                 collector.stop();
+            }
+        });
+
+        collector.on('end', async () => {
+            // Remove active session
+            activeWhitelistSessions.delete(sessionKey);
+
+            try {
+                // Disable all components and show expiration message
+                const disabledSelect = new StringSelectMenuBuilder()
+                    .setCustomId('whitelist_modules_expired')
+                    .setPlaceholder('Session expired')
+                    .setDisabled(true)
+                    .addOptions(
+                        new StringSelectMenuOptionBuilder().setLabel('Expired').setValue('expired').setDescription('This session has expired')
+                    );
+
+                const disabledSaveBtn = new ButtonBuilder()
+                    .setCustomId('whitelist_save_expired')
+                    .setLabel('Save')
+                    .setStyle(ButtonStyle.Success)
+                    .setDisabled(true);
+
+                const disabledCancelBtn = new ButtonBuilder()
+                    .setCustomId('whitelist_cancel_expired')
+                    .setLabel('Cancel')
+                    .setStyle(ButtonStyle.Danger)
+                    .setDisabled(true);
+
+                const expiredRow1 = new ActionRowBuilder().addComponents(disabledSelect);
+                const expiredRow2 = new ActionRowBuilder().addComponents(disabledSaveBtn, disabledCancelBtn);
+
+                const expiredEmbed = new EmbedBuilder()
+                    .setTitle('⏱️ Whitelist Session Expired')
+                    .setDescription(`The whitelist configuration session for **${target.tag || target.id}** has expired after 60 seconds of inactivity.`)
+                    .setColor(0xFF6B6B);
+
+                await response.edit({ embeds: [expiredEmbed], components: [expiredRow1, expiredRow2] });
+            } catch (error) {
+                console.error('Error handling whitelist session expiration:', error);
             }
         });
     }
