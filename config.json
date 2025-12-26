@@ -1,0 +1,28 @@
+{
+  "prefix": "s!",
+  "colors": {
+    "default": "#00FF00",
+    "error": "#FF0000"
+  },
+  "required_permissions": [
+    "KickMembers",
+    "BanMembers",
+    "ManageChannels",
+    "ManageRoles",
+    "ViewAuditLog",
+    "ViewChannel",
+    "SendMessages",
+    "EmbedLinks",
+    "ReadMessageHistory",
+    "UseExternalEmojis",
+    "ModerateMembers",
+    "ManageMessages"
+  ],
+  "intents": [
+    "Guilds",
+    "GuildMessages",
+    "MessageContent",
+    "GuildMembers",
+    "GuildModeration"
+  ]
+}
