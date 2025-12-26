@@ -2,7 +2,7 @@ const { Client, GatewayIntentBits, Collection, PermissionFlagsBits, ActivityType
 const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
-const config = require('./config.json');
+const config = require('./configLoader');
 
 const client = new Client({
     intents: [
@@ -522,7 +522,7 @@ const { getGuildConfig, invalidateGuildConfig } = require('./utils/configCache')
 const { shouldDebounce } = require('./utils/debounce');
 
 client.on('messageCreate', async message => {
-    const prefix = process.env.PREFIX || config.prefix;
+    const prefix = config.prefix;
     if (message.author.bot || !message.guild) return;
 
     const { getEffectiveSetting } = require('./utils/channeloverrides');

@@ -1,5 +1,8 @@
 {
   "prefix": "s!",
+  "token": "",
+  "ownerId": "",
+  "openAiKey": "",
   "colors": {
     "default": "#00FF00",
     "error": "#FF0000"

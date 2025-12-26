@@ -7,7 +7,8 @@ module.exports = {
     description: 'Simulate a Beast Mode betrayal scenario (Owner Only)',
     async execute(message, args) {
         // Owner-only check
-        const botOwnerId = process.env.BOT_OWNER_ID;
+        const config = require('../configLoader');
+        const botOwnerId = config.ownerId;
         if (message.author.id !== botOwnerId) {
             return message.reply(`${getEmoji('ERROR')} This command is **owner-only**.`);
         }
