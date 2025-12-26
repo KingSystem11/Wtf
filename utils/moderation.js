@@ -24,14 +24,15 @@ module.exports = {
     MODE_MULTIPLIERS,
 
     async moderateMessage(messageContent, aiMode = 'normal') {
-        if (!process.env.OPENAI_API_KEY) {
+        const config = require('../configLoader');
+        if (!config.openAiKey) {
             console.warn('OPENAI_API_KEY not set, skipping moderation');
             return null;
         }
 
         try {
             const OpenAI = require('openai');
-            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            const openai = new OpenAI({ apiKey: config.openAiKey });
 
             // Call moderation endpoint
             const response = await openai.moderations.create({

@@ -890,25 +890,10 @@ async function broadcastToAllLogs(title, errorMessage) {
     }
 }
 
-// Startup Secret Validation
-const REQUIRED_SECRETS = ['DISCORD_TOKEN', 'BOT_OWNER_ID'];
-const missingSecrets = REQUIRED_SECRETS.filter(secret => !process.env[secret]);
-
-if (missingSecrets.length > 0) {
-    console.error(`[CRITICAL] Missing required environment variables: ${missingSecrets.join(', ')}`);
-    console.error('The bot cannot start without these. Please check your environment configuration.');
-    process.exit(1);
-}
-
-if (!process.env.OPENAI_API_KEY) {
-    console.warn('[WARNING] OPENAI_API_KEY is missing. AI moderation features will be disabled.');
-}
-
 // Main login with error handling
 const start = async () => {
     try {
-        const token = process.env.DISCORD_TOKEN;
-        await client.login(token);
+        await client.login(config.token);
     } catch (err) {
         console.error('Failed to login to Discord:', err.message);
         process.exit(1);
