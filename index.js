@@ -272,7 +272,20 @@ for (const file of commandFiles) {
     }
 }
 
-client.once('ready', () => {
+// Slash Command Handler
+client.slashCommands = new Collection();
+const slashCommandFiles = fs.readdirSync('./slashcommands').filter(file => file.endsWith('.js'));
+
+for (const file of slashCommandFiles) {
+    try {
+        const slashCommand = require(`./slashcommands/${file}`);
+        client.slashCommands.set(slashCommand.data.name, slashCommand);
+    } catch (err) {
+        console.error(`Failed to load slash command ${file}:`, err);
+    }
+}
+
+client.once('ready', async () => {
     try {
         console.log(`Logged in as ${client.user.tag}`);
         
@@ -313,6 +326,17 @@ client.once('ready', () => {
                 console.error(`[ConfigValidator] Failed to validate ${guild.id}:`, err);
             }
         });
+
+        // Register slash commands globally
+        const slashCommandData = Array.from(client.slashCommands.values()).map(cmd => cmd.data.toJSON());
+        if (slashCommandData.length > 0) {
+            try {
+                await client.application.commands.set(slashCommandData);
+                console.log(`[SlashCommands] Registered ${slashCommandData.length} global slash commands`);
+            } catch (err) {
+                console.error('[SlashCommands] Failed to register commands:', err);
+            }
+        }
     } catch (err) {
         console.error('Error in ready event:', err);
     }
@@ -673,7 +697,7 @@ client.on('messageCreate', async message => {
     if (!message.content.startsWith(prefix)) return;
 
     const args = message.content.slice(prefix.length).trim().split(/ +/);
-    const commandName = args.shift().toLowerCase();
+        const commandName = args.shift().toLowerCase();
 
     const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
     if (!command) return;
@@ -767,6 +791,25 @@ client.on('messageCreate', async message => {
                 timestamp: new Date()
             }]
         });
+    }
+});
+
+// Slash Command Handler
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return;
+
+    const slashCommand = client.slashCommands.get(interaction.commandName);
+    if (!slashCommand) return;
+
+    try {
+        await slashCommand.execute(interaction);
+    } catch (error) {
+        console.error(`Error executing slash command ${interaction.commandName}:`, error);
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp({ content: '❌ An error occurred while executing this command.', ephemeral: true }).catch(() => {});
+        } else {
+            await interaction.reply({ content: '❌ An error occurred while executing this command.', ephemeral: true }).catch(() => {});
+        }
     }
 });
 
