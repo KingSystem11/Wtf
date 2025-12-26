@@ -216,6 +216,20 @@ const strings = getLocalizedStrings(guildId, ['help_title', 'error_desc']);
    - Prevents duplicate permission logic across codebase
    - Single source of truth for permission checks
 
+12. **Localization System for Security Messages** (`utils/localization.js`, `utils/strings.js`)
+   - Centralized `getLocalizedString(guildId, key, replacements)` helper
+   - All security violations now localized: anti-spam, anti-link, anti-@everyone, word filters, AI filter, Beast Mode, whitelist, token leak, global ban, verification
+   - Supports English and Hindi with fallback to English
+   - Guild language setting from `guild_config.language`
+   - Template replacements: `{user}`, `{count}`, `{type}`, `{category}`, `{pattern}`, `{reason}`
+
+13. **Guild Join Welcome Message** (`utils/welcome.js`)
+   - Automatically sends welcome embed when Spectre joins a guild
+   - Tries DM to guild owner first, falls back to system channel, then any available text channel
+   - Includes: bot intro, key commands (s!start, s!checklist, s!preset, s!securitydocs), premium notice
+   - Respects Discord guidelines (one message per guild join, no spam)
+   - No heavy checks, lightweight on bot startup
+
 ### Database Changes
 - Added `verification_codes` table - tracks codes, attempts, expiry, verification status
 - Added `verification_channel` column to `guild_config` table

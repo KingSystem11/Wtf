@@ -226,6 +226,24 @@ client.on('webhookUpdate', async (channel) => {
     }
 });
 
+// Guild Join - Send Welcome Message
+client.on('guildCreate', async guild => {
+    try {
+        const { sendWelcomeMessage } = require('./utils/welcome');
+        await sendWelcomeMessage(guild);
+        
+        // Ensure guild has config
+        const existing = db.prepare('SELECT guild_id FROM guild_config WHERE guild_id = ?').get(guild.id);
+        if (!existing) {
+            db.prepare('INSERT INTO guild_config (guild_id, language) VALUES (?, ?)').run(guild.id, 'en');
+        }
+        
+        console.log(`[GuildCreate] Spectre joined ${guild.name} (${guild.id}, ${guild.memberCount} members)`);
+    } catch (error) {
+        console.error(`[GuildCreate] Error handling guild join for ${guild.id}:`, error);
+    }
+});
+
 // Process-level error handlers
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
