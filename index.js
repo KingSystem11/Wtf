@@ -14,7 +14,36 @@ const client = new Client({
 
 // Database Setup
 const db = new Database('./data/spectre.db');
-db.prepare('CREATE TABLE IF NOT EXISTS guild_config (guild_id TEXT PRIMARY KEY, prefix TEXT, log_channel TEXT, antinuke INTEGER DEFAULT 0, aifilter INTEGER DEFAULT 0, antispam INTEGER DEFAULT 0, max_messages INTEGER DEFAULT 8, interval INTEGER DEFAULT 5, antilink INTEGER DEFAULT 0, antiraid INTEGER DEFAULT 0, max_joins INTEGER DEFAULT 10, antinuke_limit INTEGER DEFAULT 3, antinuke_window INTEGER DEFAULT 30, panic_mode INTEGER DEFAULT 0, staff_role_id TEXT, language TEXT DEFAULT "en", verified_role_id TEXT, ai_mode TEXT DEFAULT "normal", punishment_pipeline TEXT DEFAULT "warn,mute10,mute60,kick,ban", log_level TEXT DEFAULT "normal", verification_channel TEXT, globalban_enabled INTEGER DEFAULT 0, debug INTEGER DEFAULT 0, anti_everyone INTEGER DEFAULT 0, beast_enabled INTEGER DEFAULT 0, beast_limit_ban INTEGER DEFAULT 3, beast_limit_kick INTEGER DEFAULT 5, beast_limit_everyone INTEGER DEFAULT 2)').run();
+const schema = db.prepare('CREATE TABLE IF NOT EXISTS guild_config (guild_id TEXT PRIMARY KEY, prefix TEXT, log_channel TEXT, antinuke INTEGER DEFAULT 0, aifilter INTEGER DEFAULT 0, antispam INTEGER DEFAULT 0, max_messages INTEGER DEFAULT 8, interval INTEGER DEFAULT 5, antilink INTEGER DEFAULT 0, antiraid INTEGER DEFAULT 0, max_joins INTEGER DEFAULT 10, antinuke_limit INTEGER DEFAULT 3, antinuke_window INTEGER DEFAULT 30, panic_mode INTEGER DEFAULT 0, staff_role_id TEXT, language TEXT DEFAULT "en", verified_role_id TEXT, ai_mode TEXT DEFAULT "normal", punishment_pipeline TEXT DEFAULT "warn,mute10,mute60,kick,ban", log_level TEXT DEFAULT "normal", verification_channel TEXT, globalban_enabled INTEGER DEFAULT 0, debug INTEGER DEFAULT 0, anti_everyone INTEGER DEFAULT 0, beast_enabled INTEGER DEFAULT 0, beast_limit_ban INTEGER DEFAULT 3, beast_limit_kick INTEGER DEFAULT 5, beast_limit_everyone INTEGER DEFAULT 2)').run();
+
+// Check for missing columns and add them if they don't exist
+const tableInfo = db.prepare("PRAGMA table_info(guild_config)").all();
+const columns = tableInfo.map(info => info.name);
+
+if (!columns.includes('staff_role_id')) {
+    db.prepare('ALTER TABLE guild_config ADD COLUMN staff_role_id TEXT').run();
+}
+if (!columns.includes('anti_everyone')) {
+    db.prepare('ALTER TABLE guild_config ADD COLUMN anti_everyone INTEGER DEFAULT 0').run();
+}
+if (!columns.includes('beast_enabled')) {
+    db.prepare('ALTER TABLE guild_config ADD COLUMN beast_enabled INTEGER DEFAULT 0').run();
+}
+if (!columns.includes('beast_limit_ban')) {
+    db.prepare('ALTER TABLE guild_config ADD COLUMN beast_limit_ban INTEGER DEFAULT 3').run();
+}
+if (!columns.includes('beast_limit_kick')) {
+    db.prepare('ALTER TABLE guild_config ADD COLUMN beast_limit_kick INTEGER DEFAULT 5').run();
+}
+if (!columns.includes('beast_limit_everyone')) {
+    db.prepare('ALTER TABLE guild_config ADD COLUMN beast_limit_everyone INTEGER DEFAULT 2').run();
+}
+if (!columns.includes('verification_channel')) {
+    db.prepare('ALTER TABLE guild_config ADD COLUMN verification_channel TEXT').run();
+}
+if (!columns.includes('globalban_enabled')) {
+    db.prepare('ALTER TABLE guild_config ADD COLUMN globalban_enabled INTEGER DEFAULT 0').run();
+}
 db.prepare(`
     CREATE TABLE IF NOT EXISTS premium_guilds (
         guild_id TEXT PRIMARY KEY,
