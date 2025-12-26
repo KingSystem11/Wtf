@@ -9,7 +9,8 @@ module.exports = {
     name: 'help',
     description: 'List all commands',
     async execute(message, args, client) {
-        const config = db.prepare('SELECT staff_role_id, language FROM guild_config WHERE guild_id = ?').get(message.guild.id);
+        const dbWrapper = require('../utils/db');
+        const config = dbWrapper.query('SELECT staff_role_id, language FROM guild_config WHERE guild_id = ?', [message.guild.id]);
         const lang = config?.language || 'en';
         const langStrings = strings[lang] || strings.en;
         

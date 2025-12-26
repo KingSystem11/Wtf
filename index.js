@@ -826,6 +826,10 @@ client.on('messageCreate', async message => {
         }
     }
 
+    if (commandName === 'help' || commandName === 'ping') {
+        console.log(`[DEBUG] Executing command: ${commandName}`);
+    }
+
     try {
         const startTime = Date.now();
         await command.execute(message, args, client);
