@@ -19,9 +19,9 @@ module.exports = {
             return message.reply(`${getEmoji('ERROR')} Usage: \`s!beasttest @user\``);
         }
 
-        // Check if Beast Mode is enabled
-        const config = db.query('SELECT beast_enabled, beast_limit_ban, beast_limit_kick, beast_limit_everyone, log_channel FROM guild_config WHERE guild_id = ?', [message.guild.id]);
-        if (!config || !config.beast_enabled) {
+        // Simulation Logic
+        const guildConfig = db.query('SELECT beast_enabled, beast_limit_ban, beast_limit_kick, beast_limit_everyone, log_channel FROM guild_config WHERE guild_id = ?', [message.guild.id]);
+        if (!guildConfig || !guildConfig.beast_enabled) {
             return message.reply(`${getEmoji('ERROR')} Beast Mode is not enabled on this server.`);
         }
 
@@ -58,7 +58,7 @@ module.exports = {
                         ? `Would remove **${rolesWithPerms.size}** administrative role(s):\n${rolesWithPerms.map(r => `• ${r.name}`).join('\n')}`
                         : 'No dangerous roles to remove (user is clean)', 
                         inline: false },
-                    { name: 'Limits', value: `Ban: ${config.beast_limit_ban}\nKick: ${config.beast_limit_kick}\n@everyone: ${config.beast_limit_everyone}`, inline: true },
+                    { name: 'Limits', value: `Ban: ${guildConfig.beast_limit_ban}\nKick: ${guildConfig.beast_limit_kick}\n@everyone: ${guildConfig.beast_limit_everyone}`, inline: true },
                     { name: 'Status', value: '⚠️ **SIMULATION ONLY** - No action taken', inline: true }
                 )
                 .setFooter({ text: 'This is a test scenario. No real changes were made.' })
@@ -68,8 +68,8 @@ module.exports = {
             await message.reply({ embeds: [simulationEmbed] });
 
             // Send to log channel if configured
-            if (config.log_channel) {
-                const logChannel = message.guild.channels.cache.get(config.log_channel);
+            if (guildConfig.log_channel) {
+                const logChannel = message.guild.channels.cache.get(guildConfig.log_channel);
                 if (logChannel) {
                     const logEmbed = new EmbedBuilder()
                         .setTitle(`${getEmoji('BAN')} [BEAST SIMULATION] Betrayal Test Executed`)
@@ -81,7 +81,7 @@ module.exports = {
                                 ? `${rolesWithPerms.size} role(s):\n${rolesWithPerms.map(r => `• ${r.name}`).join('\n')}`
                                 : 'None (user has no dangerous roles)', 
                                 inline: false },
-                            { name: 'Limits', value: `Ban: ${config.beast_limit_ban}\nKick: ${config.beast_limit_kick}\n@everyone: ${config.beast_limit_everyone}`, inline: true }
+                            { name: 'Limits', value: `Ban: ${guildConfig.beast_limit_ban}\nKick: ${guildConfig.beast_limit_kick}\n@everyone: ${guildConfig.beast_limit_everyone}`, inline: true }
                         )
                         .setFooter({ text: 'Simulation test - no changes made to server' })
                         .setTimestamp();

@@ -19,7 +19,7 @@ module.exports = {
         }
 
         // Fetch from DB and cache
-        const config = db.prepare('SELECT * FROM guild_config WHERE guild_id = ?').get(guildId);
+        const config = db.query('SELECT * FROM guild_config WHERE guild_id = ?', [guildId]);
         if (config) {
             configCache.set(guildId, {
                 data: config,
