@@ -27,7 +27,8 @@ function getDatabase() {
 
 function query(sql, params = []) {
     try {
-        return getDatabase().prepare(sql).get(...params);
+        const result = getDatabase().prepare(sql).get(...params);
+        return result === undefined ? null : result;
     } catch (err) {
         console.error(`[DB ERROR] Query: ${sql}`, err);
         throw err;

@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits, Collection, PermissionFlagsBits, ActivityType
 const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
+const dbWrapper = require('./utils/db');
 const config = require('./configLoader');
 
 const client = new Client({
@@ -167,7 +168,7 @@ async function checkAntiNuke(guild, executor, type) {
         return;
     }
 
-    const config = db.prepare('SELECT antinuke, antinuke_limit, antinuke_window, log_channel, debug FROM guild_config WHERE guild_id = ?').get(guild.id);
+    const config = dbWrapper.query('SELECT antinuke, antinuke_limit, antinuke_window, log_channel, debug FROM guild_config WHERE guild_id = ?', [guild.id]);
     if (!config || !config.antinuke) return;
 
     if (config.debug) console.log(`[DEBUG] [${guild.id}] Anti-Nuke check for ${type} triggered by ${executor?.tag}`);
@@ -368,7 +369,7 @@ client.once('ready', async () => {
         client.guilds.cache.forEach(async (guild) => {
             try {
                 const result = await validateGuildConfig(guild);
-                if (result.repaired) {
+                if (result && result.repaired) {
                     console.log(`[ConfigValidator] Repaired config for guild ${guild.name} (${guild.id})`);
                 }
             } catch (err) {
@@ -396,7 +397,7 @@ const joinLog = new Map();
 
 client.on('guildMemberAdd', async member => {
     const guild = member.guild;
-    const config = db.prepare('SELECT antiraid, max_joins, log_channel, panic_mode, verification_channel, verified_role_id, globalban_enabled, debug FROM guild_config WHERE guild_id = ?').get(guild.id);
+    const config = dbWrapper.query('SELECT antiraid, max_joins, log_channel, panic_mode, verification_channel, verified_role_id, globalban_enabled, debug FROM guild_config WHERE guild_id = ?', [guild.id]);
     
     if (config?.debug) console.log(`[DEBUG] [${guild.id}] Member join: ${member.user.tag}`);
     
@@ -726,11 +727,11 @@ client.on('messageCreate', async message => {
     if (aifilterEnabled && !shouldSkipAI) {
         if (isWhitelisted(message.member, 'aifilter')) {
             // Note: We don't log AI filter whitelist bypass to avoid OpenAI API costs/latency for whitelisted users
-        } else if (guildConfig && process.env.OPENAI_API_KEY) {
+        } else if (guildConfig && config.openAiKey) {
             if (guildConfig.debug) console.log(`[DEBUG] [${message.guild.id}] AI Moderation check for message from ${message.author.tag}`);
             
             // Premium Check for AI
-            const premium = db.prepare('SELECT expires_at FROM premium_guilds WHERE guild_id = ?').get(message.guild.id);
+            const premium = dbWrapper.query('SELECT expires_at FROM premium_guilds WHERE guild_id = ?', [message.guild.id]);
             const isPremium = premium && (new Date(premium.expires_at) > new Date());
             
             if (isPremium) {
@@ -774,7 +775,7 @@ client.on('messageCreate', async message => {
     }
 
     // Fetch language for strings
-    const langConfig = db.prepare('SELECT language FROM guild_config WHERE guild_id = ?').get(message.guild.id);
+    const langConfig = dbWrapper.query('SELECT language FROM guild_config WHERE guild_id = ?', [message.guild.id]);
     const lang = langConfig?.language || 'en';
     const strings = require('./utils/strings');
     const langStrings = strings[lang] || strings.en;
@@ -802,7 +803,7 @@ client.on('messageCreate', async message => {
         if (member.id === guild.ownerId) return true;
         if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
         
-        const config = db.prepare('SELECT staff_role_id FROM guild_config WHERE guild_id = ?').get(guild.id);
+        const config = dbWrapper.query('SELECT staff_role_id FROM guild_config WHERE guild_id = ?', [guild.id]);
         if (config?.staff_role_id && member.roles.cache.has(config.staff_role_id)) return true;
         
         return false;
@@ -819,7 +820,7 @@ client.on('messageCreate', async message => {
 
     // Premium Check
     if (command.premiumOnly) {
-        const premium = db.prepare('SELECT expires_at FROM premium_guilds WHERE guild_id = ?').get(message.guild.id);
+        const premium = dbWrapper.query('SELECT expires_at FROM premium_guilds WHERE guild_id = ?', [message.guild.id]);
         const isPremium = premium && (new Date(premium.expires_at) > new Date());
         if (!isPremium) {
             return message.reply(`${getEmoji('PREMIUM')} This command is restricted to **Spectre Premium** servers.`);

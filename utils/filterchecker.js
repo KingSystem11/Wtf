@@ -1,13 +1,12 @@
 // Word and Regex Filter Checker
-const Database = require('better-sqlite3');
-const db = new Database('./data/spectre.db');
+const db = require('./db');
 
 module.exports = {
     async checkFilters(message) {
         if (!message.guild) return null;
 
         try {
-            const filters = db.prepare('SELECT id, pattern, type, action FROM word_filters WHERE guild_id = ?').all(message.guild.id);
+            const filters = db.all('SELECT id, pattern, type, action FROM word_filters WHERE guild_id = ?', [message.guild.id]);
             
             for (const filter of filters) {
                 let matched = false;
@@ -46,7 +45,7 @@ module.exports = {
 
     async logFilterAction(guild, message, filter, actionTaken) {
         try {
-            const config = db.prepare('SELECT log_channel FROM guild_config WHERE guild_id = ?').get(guild.id);
+            const config = db.query('SELECT log_channel FROM guild_config WHERE guild_id = ?', [guild.id]);
             if (!config?.log_channel) return;
 
             const { logEvent } = require('./logger');
