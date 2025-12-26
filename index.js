@@ -470,6 +470,8 @@ client.on('guildMemberAdd', async member => {
 
 // Anti-Spam Tracking
 const messageLog = new Map();
+const { getGuildConfig, invalidateGuildConfig } = require('./utils/configCache');
+const { shouldDebounce } = require('./utils/debounce');
 
 client.on('messageCreate', async message => {
     const prefix = process.env.PREFIX || config.prefix;
@@ -478,6 +480,14 @@ client.on('messageCreate', async message => {
     const { getEffectiveSetting } = require('./utils/channeloverrides');
     const { isWhitelisted, logWhitelistSkip } = require('./utils/whitelist');
     const { trackBeastAction } = require('./utils/beast');
+    
+    // Get cached guild config (single DB query instead of multiple)
+    const guildConfig = getGuildConfig(message.guild.id);
+    if (!guildConfig) return;
+
+    // Check if heavy AI checks should be debounced
+    const aiDebounceKey = `${message.guild.id}-${message.author.id}-aifilter`;
+    const shouldSkipAI = shouldDebounce(aiDebounceKey);
     
     // Anti-Mention-Everyone
     const antiEveryoneEnabled = getEffectiveSetting(message.guild, message.channel, 'anti_everyone');
@@ -494,35 +504,30 @@ client.on('messageCreate', async message => {
     
     if (isWhitelisted(message.member, 'antispam')) {
         // Skip antispam checks but continue to filter checks
-        if (messageLog.get(`${message.guild.id}-${message.author.id}`)) { // Only log if they actually spam
-            // Note: We don't want to spam logs every message, so we only log if they WOULD have been flagged
-            const antispamConfig = db.prepare('SELECT max_messages, interval FROM guild_config WHERE guild_id = ?').get(message.guild.id);
-            if (antispamConfig) {
-                const key = `${message.guild.id}-${message.author.id}`;
-                const now = Date.now();
-                const intervalMs = antispamConfig.interval * 1000;
-                let userLog = messageLog.get(key) || [];
-                userLog = userLog.filter(t => now - t < intervalMs);
-                if (userLog.length > antispamConfig.max_messages) {
-                    await logWhitelistSkip(message.guild, message.author, 'antispam');
-                    messageLog.set(key, []); // Reset to avoid log spam
-                }
+        if (messageLog.get(`${message.guild.id}-${message.author.id}`)) {
+            const key = `${message.guild.id}-${message.author.id}`;
+            const now = Date.now();
+            const intervalMs = guildConfig.interval * 1000;
+            let userLog = messageLog.get(key) || [];
+            userLog = userLog.filter(t => now - t < intervalMs);
+            if (userLog.length > guildConfig.max_messages) {
+                await logWhitelistSkip(message.guild, message.author, 'antispam');
+                messageLog.set(key, []);
             }
         }
     } else {
         const antispamEnabled = getEffectiveSetting(message.guild, message.channel, 'antispam');
-        const antispamConfig = db.prepare('SELECT max_messages, interval, log_channel FROM guild_config WHERE guild_id = ?').get(message.guild.id);
-        if (antispamConfig && antispamEnabled) {
+        if (guildConfig && guildConfig.antispam && antispamEnabled) {
             const key = `${message.guild.id}-${message.author.id}`;
             const now = Date.now();
-            const intervalMs = antispamConfig.interval * 1000;
+            const intervalMs = guildConfig.interval * 1000;
             
             let userLog = messageLog.get(key) || [];
             userLog = userLog.filter(timestamp => now - timestamp < intervalMs);
             userLog.push(now);
             messageLog.set(key, userLog);
 
-            if (userLog.length > antispamConfig.max_messages) {
+            if (userLog.length > guildConfig.max_messages) {
                 try {
                     await message.delete();
                     const { handleOffense } = require('./utils/pipeline');
@@ -571,8 +576,7 @@ client.on('messageCreate', async message => {
         }
     } else {
         const antilinkEnabled = getEffectiveSetting(message.guild, message.channel, 'antilink');
-        const antilinkConfig = db.prepare('SELECT log_channel FROM guild_config WHERE guild_id = ?').get(message.guild.id);
-        if (antilinkConfig && antilinkEnabled) {
+        if (guildConfig && guildConfig.antilink && antilinkEnabled) {
             const inviteRegex = /(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/.+/i;
             const urlRegex = /(https?:\/\/[^\s]+)/gi;
             
@@ -612,12 +616,11 @@ client.on('messageCreate', async message => {
         }
     }
 
-    // AI Filtering logic
+    // AI Filtering logic (token leak detection - always checked)
     const tokenRegex = /[a-zA-Z0-9_-]{24,28}\.[a-zA-Z0-9_-]{6}\.[a-zA-Z0-9_-]{27,38}/;
     if (tokenRegex.test(message.content)) {
-        const config = db.prepare('SELECT log_channel FROM guild_config WHERE guild_id = ?').get(message.guild.id);
-        if (config?.log_channel) {
-            const channel = message.guild.channels.cache.get(config.log_channel);
+        if (guildConfig?.log_channel) {
+            const channel = message.guild.channels.cache.get(guildConfig.log_channel);
             if (channel) {
                 channel.send({
                     embeds: [{
@@ -631,15 +634,14 @@ client.on('messageCreate', async message => {
         }
     }
 
-    // OpenAI Moderation Filter (with channel override support)
+    // OpenAI Moderation Filter (debounced to avoid API spam on rapid messages)
     const aifilterEnabled = getEffectiveSetting(message.guild, message.channel, 'aifilter');
-    const aiConfig = db.prepare('SELECT ai_mode, log_channel, debug FROM guild_config WHERE guild_id = ?').get(message.guild.id);
     
-    if (aifilterEnabled) {
+    if (aifilterEnabled && !shouldSkipAI) {
         if (isWhitelisted(message.member, 'aifilter')) {
             // Note: We don't log AI filter whitelist bypass to avoid OpenAI API costs/latency for whitelisted users
-        } else if (aiConfig && process.env.OPENAI_API_KEY) {
-            if (aiConfig.debug) console.log(`[DEBUG] [${message.guild.id}] AI Moderation check for message from ${message.author.tag}`);
+        } else if (guildConfig && process.env.OPENAI_API_KEY) {
+            if (guildConfig.debug) console.log(`[DEBUG] [${message.guild.id}] AI Moderation check for message from ${message.author.tag}`);
             
             // Premium Check for AI
             const premium = db.prepare('SELECT expires_at FROM premium_guilds WHERE guild_id = ?').get(message.guild.id);
@@ -648,7 +650,7 @@ client.on('messageCreate', async message => {
             if (isPremium) {
                 try {
                     const { moderateMessage, logModerationAction } = require('./utils/moderation');
-                    const aiMode = aiConfig.ai_mode || 'normal';
+                    const aiMode = guildConfig.ai_mode || 'normal';
                     
                     const result = await moderateMessage(message.content, aiMode);
                     
