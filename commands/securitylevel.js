@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
+const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
     name: 'securitylevel',
@@ -9,7 +10,7 @@ module.exports = {
         const config = db.prepare('SELECT antinuke, antiraid, antispam, antilink, aifilter, log_channel FROM guild_config WHERE guild_id = ?').get(message.guild.id);
         
         if (!config) {
-            return message.reply('❌ No configuration found for this server. Please set up the bot first.');
+            return message.reply(`${getEmoji('ERROR')} No configuration found for this server. Please set up the bot first.`);
         }
 
         const features = [
@@ -38,10 +39,10 @@ module.exports = {
         if (!config.log_channel) suggestions.push('Set a **Log Channel** to track security events.');
         if (!config.aifilter) suggestions.push('Activate **AI Filter** (Premium) for advanced toxicity protection.');
 
-        const statusString = features.map(f => `${f.active ? '✅' : '❌'} ${f.name}`).join('\n');
+        const statusString = features.map(f => `${f.active ? getEmoji('SUCCESS') : getEmoji('ERROR')} ${f.name}`).join('\n');
 
         const embed = new EmbedBuilder()
-            .setTitle('🛡️ Security Posture Summary')
+            .setTitle(`${getEmoji('SECURITY')} Security Posture Summary`)
             .setColor(color)
             .setThumbnail(message.guild.iconURL())
             .addFields(

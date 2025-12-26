@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
+const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
     name: 'premium',
@@ -10,7 +11,7 @@ module.exports = {
 
         if (sub === 'on') {
             if (message.author.id !== message.guild.ownerId) {
-                return message.reply('❌ Only the server owner can activate premium.');
+                return message.reply(`${getEmoji('ERROR')} Only the server owner can activate premium.`);
             }
 
             const days = parseInt(args[1]) || 365;
@@ -25,7 +26,7 @@ module.exports = {
                     expires_at = EXCLUDED.expires_at
             `).run(message.guild.id, message.author.id, expiresAt.toISOString());
 
-            return message.reply(`🌟 **Premium Activated!** Your server now has access to all premium features for **${days} days**.`);
+            return message.reply(`${getEmoji('PREMIUM')} **Premium Activated!** Your server now has access to all premium features for **${days} days**.`);
         }
 
         if (sub === 'status' || !sub) {
@@ -33,11 +34,11 @@ module.exports = {
             const isPremium = premium && (new Date(premium.expires_at) > new Date());
 
             const embed = new EmbedBuilder()
-                .setTitle('💎 Spectre Premium Status')
+                .setTitle(`${getEmoji('PREMIUM')} Spectre Premium Status`)
                 .setColor(isPremium ? '#FFD700' : '#808080')
                 .setDescription(isPremium ? 'Your server is currently **Spectre Premium**.' : 'Your server is currently on the **Free Tier**.')
                 .addFields(
-                    { name: 'Status', value: isPremium ? '✅ Active' : '❌ Inactive', inline: true }
+                    { name: 'Status', value: isPremium ? `${getEmoji('SUCCESS')} Active` : `${getEmoji('ERROR')} Inactive`, inline: true }
                 );
 
             if (isPremium) {

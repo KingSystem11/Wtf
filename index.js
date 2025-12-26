@@ -125,6 +125,7 @@ async function checkAntiNuke(guild, executor, type) {
     
     const { isWhitelisted, logWhitelistSkip } = require('./utils/whitelist');
     const { trackBeastAction } = require('./utils/beast');
+    const { getEmoji } = require('./helpers/emoji');
 
     // Beast Mode tracking for administrative actions
     if (['ban', 'kick'].includes(type)) {
@@ -180,7 +181,7 @@ async function checkAntiNuke(guild, executor, type) {
             const { logEvent } = require('./utils/logger');
             const logChannel = guild.channels.cache.get(config.log_channel);
             const embed = {
-                title: '🚨 Anti-Nuke Triggered',
+                title: `${getEmoji('NUKE')} Anti-Nuke Triggered`,
                 color: 0xFF0000,
                 description: `User **${executor.tag}** performed mass **${type}** (${filteredActions.length} actions). Their administrative roles have been removed.`,
                 timestamp: new Date()
@@ -257,12 +258,13 @@ process.on('uncaughtException', (err) => {
 
 async function broadcastToAllLogs(title, errorMessage) {
     const { logEvent } = require('./utils/logger');
+    const { getEmoji } = require('./helpers/emoji');
     const guilds = client.guilds.cache;
     
     for (const [id, guild] of guilds) {
         try {
             const embed = {
-                title: `⚠️ Spectre System Error: ${title}`,
+                title: `${getEmoji('WARN')} Spectre System Error: ${title}`,
                 color: 0xFF0000,
                 description: `A system error occurred: \`${errorMessage}\`\n\nRestart Spectre or contact the bot owner if this repeats.`,
                 timestamp: new Date()
@@ -384,8 +386,9 @@ client.on('guildMemberAdd', async member => {
                     const { logEvent } = require('./utils/logger');
                     const logChannel = guild.channels.cache.get(config.log_channel);
                     if (logChannel) {
+                        const { getEmoji } = require('./helpers/emoji');
                         const embed = {
-                            title: '🌍 Global Ban Alert',
+                            title: `${getEmoji('GLOBAL')} Global Ban Alert`,
                             color: 0xFF6B6B,
                             description: `User **${member.user.tag}** (${member.id}) is on global ban list but auto-ban failed.`,
                             fields: [
@@ -446,8 +449,9 @@ client.on('guildMemberAdd', async member => {
             const { logEvent } = require('./utils/logger');
             const logChannel = guild.channels.cache.get(config.log_channel);
             if (logChannel) {
-                const embed = {
-                    title: '👻 Panic Mode: Member Kicked',
+                const { getEmoji } = require('./helpers/emoji');
+            const embed = {
+                    title: `${getEmoji('PANIC')} Panic Mode: Member Kicked`,
                     color: 0xFF0000,
                     description: `Automatically kicked **${member.user.tag}** because panic mode is active.`,
                     timestamp: new Date()
@@ -477,8 +481,9 @@ client.on('guildMemberAdd', async member => {
 
                 if (devMode && !isTestGuild) {
                     const { logEvent } = require('./utils/logger');
+                    const { getEmoji } = require('./helpers/emoji');
                     const embed = {
-                        title: '🛠️ [DEV MODE] Anti-Raid Triggered',
+                        title: `${getEmoji('MOD')} [DEV MODE] Anti-Raid Triggered`,
                         color: 0xFFAA00,
                         description: `Mass join detected (**${joins.length}** joins). Lockdown skipped due to Dev Mode.`,
                         timestamp: new Date()
@@ -490,10 +495,11 @@ client.on('guildMemberAdd', async member => {
                 await guild.roles.everyone.setPermissions(guild.roles.everyone.permissions.remove(PermissionFlagsBits.SendMessages));
                 
                 const { logEvent } = require('./utils/logger');
+                const { getEmoji } = require('./helpers/emoji');
                 const logChannel = guild.channels.cache.get(config.log_channel);
                 if (logChannel) {
                     const embed = {
-                        title: '🚨 Anti-Raid Triggered',
+                        title: `${getEmoji('RAID')} Anti-Raid Triggered`,
                         color: 0xFF0000,
                         description: `Mass join detected (**${joins.length}** joins in 1 min). Server has been locked down.`,
                         timestamp: new Date()

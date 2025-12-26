@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
+const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
     name: 'backup',
@@ -9,7 +10,7 @@ module.exports = {
     highRisk: true,
     async execute(message) {
         if (message.author.id !== message.guild.ownerId) {
-            return message.reply('❌ Only the server owner can create backups.');
+            return message.reply(`${getEmoji('ERROR')} Only the server owner can create backups.`);
         }
 
         const config = db.prepare('SELECT * FROM guild_config WHERE guild_id = ?').get(message.guild.id);
@@ -30,7 +31,7 @@ module.exports = {
         );
 
         const embed = new EmbedBuilder()
-            .setTitle('📦 Backup Created')
+            .setTitle(`${getEmoji('BACKUP')} Backup Created`)
             .setColor('#00FF00')
             .setDescription(`Server configuration has been backed up successfully.\n**Backup ID:** \`${result.lastInsertRowid}\``)
             .setFooter({ text: '👻 Spectre Security' })

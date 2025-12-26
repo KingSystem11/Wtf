@@ -3,6 +3,7 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 const strings = require('../utils/strings');
 const { isStaff, isOwner } = require('../utils/permissions');
+const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
     name: 'help',
@@ -78,7 +79,7 @@ module.exports = {
         };
 
         const helpEmbed = new EmbedBuilder()
-            .setTitle(langStrings.help_title)
+            .setTitle(`${getEmoji('INFO')} ${langStrings.help_title}`)
             .setColor('#00FF00')
             .setThumbnail(client.user.displayAvatarURL())
             .setFooter({ text: langStrings.help_footer })
@@ -91,7 +92,7 @@ module.exports = {
                 if (cmd.owner && !memberIsOwner) continue;
                 if (cmd.staff && !memberIsStaff) continue;
 
-                const premiumTag = cmd.premium ? ' ⭐' : '';
+                const premiumTag = cmd.premium ? ` ${getEmoji('PREMIUM')}` : '';
                 const aliasStr = cmd.aliases ? ` (aliases: \`${cmd.aliases.join(', ')}\`)` : '';
                 cmdList += `\`${cmd.name}\`${aliasStr} - ${cmd.desc}${premiumTag}\n`;
             }

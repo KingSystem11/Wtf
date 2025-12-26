@@ -1,6 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
+const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
     name: 'antilink',
@@ -12,7 +13,7 @@ module.exports = {
         if (sub === 'on' || sub === 'off') {
             const value = sub === 'on' ? 1 : 0;
             db.prepare('INSERT INTO guild_config (guild_id, antilink) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET antilink = EXCLUDED.antilink').run(message.guild.id, value);
-            return message.reply(`🔗 Anti-link has been turned **${sub.toUpperCase()}**.`);
+            return message.reply(`${getEmoji('LINK')} Anti-link has been turned **${sub.toUpperCase()}**.`);
         }
 
         if (sub === 'whitelist') {
@@ -21,11 +22,11 @@ module.exports = {
 
             if (action === 'add' && domain) {
                 db.prepare('INSERT OR IGNORE INTO whitelist (guild_id, domain) VALUES (?, ?)').run(message.guild.id, domain);
-                return message.reply(`✅ Added **${domain}** to the whitelist.`);
+                return message.reply(`${getEmoji('WHITELIST')} Added **${domain}** to the whitelist.`);
             }
             if (action === 'remove' && domain) {
                 db.prepare('DELETE FROM whitelist WHERE guild_id = ? AND domain = ?').run(message.guild.id, domain);
-                return message.reply(`❌ Removed **${domain}** from the whitelist.`);
+                return message.reply(`${getEmoji('BLACKLIST')} Removed **${domain}** from the whitelist.`);
             }
             return message.reply('Usage: `s!antilink whitelist add/remove <domain>`');
         }

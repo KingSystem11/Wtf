@@ -1,6 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
+const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
     name: 'antiraid',
@@ -14,7 +15,7 @@ module.exports = {
         if (sub === 'on' || sub === 'off') {
             const value = sub === 'on' ? 1 : 0;
             db.prepare('INSERT INTO guild_config (guild_id, antiraid) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET antiraid = EXCLUDED.antiraid').run(message.guild.id, value);
-            return message.reply(`🛡️ Anti-raid has been turned **${sub.toUpperCase()}**.`);
+            return message.reply(`${getEmoji('RAID')} Anti-raid has been turned **${sub.toUpperCase()}**.`);
         }
 
         if (sub === 'config') {
@@ -22,7 +23,7 @@ module.exports = {
             if (isNaN(max)) return message.reply('Usage: s!antiraid config <maxJoinsPerMinute>');
 
             db.prepare('INSERT INTO guild_config (guild_id, max_joins) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET max_joins = EXCLUDED.max_joins').run(message.guild.id, max);
-            return message.reply(`⚙️ Anti-raid threshold set to **${max}** joins per minute.`);
+            return message.reply(`${getEmoji('SETTINGS')} Anti-raid threshold set to **${max}** joins per minute.`);
         }
 
         message.reply('Usage:\n`s!antiraid <on/off>`\n`s!antiraid config <maxJoinsPerMinute>`');

@@ -1,6 +1,7 @@
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
+const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
     name: 'mute',
@@ -16,7 +17,7 @@ module.exports = {
         const reason = args.slice(2).join(' ') || 'No reason provided';
 
         const logEmbed = new EmbedBuilder()
-            .setTitle('🔇 Member Muted')
+            .setTitle(`${getEmoji('MUTE')} Member Muted`)
             .setColor('#FFFF00')
             .addFields(
                 { name: 'Server', value: message.guild.name },

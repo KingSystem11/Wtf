@@ -1,6 +1,7 @@
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
+const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
     name: 'case',
@@ -25,7 +26,7 @@ module.exports = {
         if (!caseData) return message.reply('Case not found.');
 
         const embed = new EmbedBuilder()
-            .setTitle(`Case Details: ${type.toUpperCase()} #${caseId}`)
+            .setTitle(`${getEmoji('CASE')} Case Details: ${type.toUpperCase()} #${caseId}`)
             .setColor('#00FF00')
             .setTimestamp(new Date(caseData.created_at || caseData.date));
 

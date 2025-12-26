@@ -1,6 +1,7 @@
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
+const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
     name: 'ban',
@@ -16,7 +17,7 @@ module.exports = {
         const reason = args.slice(1).join(' ') || 'No reason provided';
         
         const logEmbed = new EmbedBuilder()
-            .setTitle('🔨 Member Banned')
+            .setTitle(`${getEmoji('BAN')} Member Banned`)
             .setColor('#FF0000')
             .addFields(
                 { name: 'Server', value: message.guild.name },
