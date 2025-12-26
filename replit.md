@@ -78,6 +78,53 @@ Preferred communication style: Simple, everyday language.
 - Environment variable `DISCORD_TOKEN` required for bot authentication
 - Environment variable `OPENAI_API_KEY` required for moderation & AI features
 
+## Localization System
+
+### Implementation Details
+- **Central File**: `utils/strings.js` - Contains all user-facing strings in English and Hindi (plus Spanish/Russian/German for extensibility)
+- **Helper Module**: `utils/localization.js` exports `getLocalizedString(guildId, key, replacements)`
+  - Fetches guild's language setting from `guild_config.language`
+  - Supports template placeholders: `{user}`, `{count}`, `{type}`, `{category}`, etc.
+  - Fallback to English if translation missing
+  - No database schema changes required
+  
+### Supported Languages
+- **en** - English (default)
+- **hi** - Hindi (मुख्य भाषा)
+- **sp** - Spanish (for extensibility)
+- **ru** - Russian (for extensibility)
+- **ge** - German (for extensibility)
+
+### Security Message Localization
+All user-facing security events now support multi-language logging:
+- **Anti-Spam**: `antispam_action`, `antispam_log_title`, `antispam_log_desc`
+- **Anti-Link**: `antilink_action`, `antilink_log_title`, `antilink_log_desc`
+- **Anti-@everyone**: `antieveryone_action`, `antieveryone_log_title`, `antieveryone_log_desc`
+- **Word Filters**: `wordfilter_action`, `wordfilter_log_title`, `wordfilter_log_desc`
+- **AI Filter**: `aifilter_action`, `aifilter_log_title`, `aifilter_log_desc`
+- **Beast Mode**: `beast_log_title`, `beast_log_desc`, `beast_perms_removed`
+- **Whitelist**: `whitelist_updated`, `whitelist_modules`, `whitelist_cancelled`, `whitelist_expired`
+- **Token Leak**: `token_leak_title`, `token_leak_desc`
+- **Global Ban**: `globalban_log_title`, `globalban_log_desc`, `globalban_alert`
+- **Verification**: `verify_code_sent`
+
+### Usage Example
+```javascript
+const { getLocalizedString } = require('./utils/localization');
+
+// Single string with replacements
+const reason = getLocalizedString(guildId, 'antispam_action');
+const logMsg = getLocalizedString(guildId, 'antispam_log_desc', {
+    user: 'UserName',
+    count: 5,
+    interval: 10
+});
+
+// Multiple strings at once
+const { getLocalizedStrings } = require('./utils/localization');
+const strings = getLocalizedStrings(guildId, ['help_title', 'error_desc']);
+```
+
 ## Recent Changes (Dec 26, 2025)
 
 ### Added Features

@@ -520,8 +520,10 @@ client.on('messageCreate', async message => {
             await trackBeastAction(message.guild, message.author, 'everyone');
         } else {
             await message.delete();
+            const { getLocalizedString } = require('./utils/localization');
+            const reason = getLocalizedString(message.guild.id, 'antieveryone_action');
             const { handleOffense } = require('./utils/pipeline');
-            await handleOffense(message.member, 'Unauthorized mention of @everyone/@here');
+            await handleOffense(message.member, reason);
             return;
         }
     }
@@ -554,8 +556,10 @@ client.on('messageCreate', async message => {
             if (userLog.length > guildConfig.max_messages) {
                 try {
                     await message.delete();
+                    const { getLocalizedString } = require('./utils/localization');
+                    const reason = getLocalizedString(message.guild.id, 'antispam_action');
                     const { handleOffense } = require('./utils/pipeline');
-                    await handleOffense(message.member, 'Spam detected (Pipeline Escalation)');
+                    await handleOffense(message.member, reason);
                 } catch (err) {
                     console.error('Anti-Spam Error:', err);
                 }
@@ -629,8 +633,10 @@ client.on('messageCreate', async message => {
                 if (shouldDelete) {
                     try {
                         await message.delete();
+                        const { getLocalizedString } = require('./utils/localization');
+                        const reason = getLocalizedString(message.guild.id, 'antilink_action');
                         const { handleOffense } = require('./utils/pipeline');
-                        await handleOffense(message.member, 'Unauthorized link (Pipeline Escalation)');
+                        await handleOffense(message.member, reason);
                         return;
                     } catch (err) {
                         console.error('Anti-Link Error:', err);
@@ -644,13 +650,16 @@ client.on('messageCreate', async message => {
     const tokenRegex = /[a-zA-Z0-9_-]{24,28}\.[a-zA-Z0-9_-]{6}\.[a-zA-Z0-9_-]{27,38}/;
     if (tokenRegex.test(message.content)) {
         if (guildConfig?.log_channel) {
+            const { getLocalizedString } = require('./utils/localization');
+            const title = getLocalizedString(message.guild.id, 'token_leak_title');
+            const desc = getLocalizedString(message.guild.id, 'token_leak_desc', { user: message.author.tag });
             const channel = message.guild.channels.cache.get(guildConfig.log_channel);
             if (channel) {
                 channel.send({
                     embeds: [{
-                        title: '⚠️ Potential Token Leak',
+                        title: title,
                         color: 0xFFAA00,
-                        description: `User **${message.author.tag}** sent a message that appears to contain a Discord bot token.`,
+                        description: desc,
                         timestamp: new Date()
                     }]
                 });

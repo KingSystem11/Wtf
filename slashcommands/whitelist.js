@@ -82,16 +82,21 @@ module.exports = {
                 db.run('INSERT OR REPLACE INTO whitelist (guild_id, target_id, type, scopes, added_by) VALUES (?, ?, ?, ?, ?)', 
                     [interaction.guildId, target.id, 'user', selectedModules.join(','), interaction.user.id]);
                 
+                const { getLocalizedString } = require('../utils/localization');
+                const title = getLocalizedString(interaction.guildId, 'whitelist_updated', { user: target.tag });
+                const modulesLabel = getLocalizedString(interaction.guildId, 'whitelist_modules');
                 const successEmbed = new EmbedBuilder()
-                    .setTitle(`${getEmoji('SUCCESS')} Whitelist Updated`)
-                    .setDescription(`Successfully updated whitelist for **${target.tag}**.`)
-                    .addFields({ name: 'Enabled Modules', value: selectedModules.join(', ') })
+                    .setTitle(`${getEmoji('SUCCESS')} ${title}`)
+                    .setDescription('')
+                    .addFields({ name: modulesLabel, value: selectedModules.join(', ') })
                     .setColor(0x00FF00);
                 
                 await i.update({ embeds: [successEmbed], components: [] });
                 collector.stop();
             } else if (i.customId === 'whitelist_cancel') {
-                await i.update({ content: 'Whitelist setup cancelled.', embeds: [], components: [] });
+                const { getLocalizedString } = require('../utils/localization');
+                const cancelText = getLocalizedString(interaction.guildId, 'whitelist_cancelled');
+                await i.update({ content: cancelText, embeds: [], components: [] });
                 collector.stop();
             }
         });

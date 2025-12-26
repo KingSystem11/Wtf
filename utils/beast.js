@@ -45,10 +45,19 @@ module.exports = {
                 }
 
                 const { logEvent } = require('./logger');
+                const { getLocalizedString } = require('./localization');
+                const title = getLocalizedString(guild.id, 'beast_log_title');
+                const desc = getLocalizedString(guild.id, 'beast_log_desc', {
+                    user: executor.tag,
+                    type: actionType,
+                    count: actions.length,
+                    limit: limit
+                });
+                const permsText = getLocalizedString(guild.id, 'beast_perms_removed');
                 const embed = {
-                    title: `${getEmoji('BAN')} BEAST MODE: BETRAYAL DETECTED`,
+                    title: `${getEmoji('BAN')} ${title}`,
                     color: 0xFF0000,
-                    description: `Whitelisted user **${executor.tag}** (${executor.id}) has exceeded the **${actionType}** limit (${actions.length}/${limit}).\n\nAdministrative permissions have been revoked.`,
+                    description: `${desc}\n\n${permsText}`,
                     timestamp: new Date()
                 };
                 await logEvent(guild, embed, 'critical');

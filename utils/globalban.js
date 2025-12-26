@@ -51,9 +51,11 @@ module.exports = {
             if (!config?.log_channel) return;
 
             const { logEvent } = require('./logger');
+            const { getLocalizedString } = require('./localization');
             
+            const title = getLocalizedString(guild.id, 'globalban_log_title');
             const embed = {
-                title: '🌍 Global Ban Action',
+                title: `🌍 ${title}`,
                 color: action === 'auto_ban' ? 0xFF0000 : (action === 'alert' ? 0xFFAA00 : 0x00FF00),
                 fields: [
                     { name: 'User ID', value: userId, inline: true },

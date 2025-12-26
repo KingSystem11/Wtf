@@ -50,11 +50,13 @@ module.exports = {
             if (!config?.log_channel) return;
 
             const { logEvent } = require('./logger');
+            const { getLocalizedString } = require('./localization');
             
             const typeLabel = filter.type === 'regex' ? '(Regex)' : '(Word)';
+            const title = getLocalizedString(guild.id, 'wordfilter_log_title');
             
             const embed = {
-                title: '🚫 Word Filter Triggered',
+                title: `🚫 ${title}`,
                 color: 0xFF6B6B,
                 fields: [
                     { name: 'User', value: `**${message.author.tag}**`, inline: true },

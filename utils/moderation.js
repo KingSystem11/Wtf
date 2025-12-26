@@ -86,14 +86,17 @@ module.exports = {
             if (!config?.log_channel) return;
 
             const { logEvent } = require('./logger');
+            const { getLocalizedString } = require('./localization');
             
             // Build category string
             const categoryStr = result.categories
                 .map(c => `${c.category} (${c.score.toFixed(3)})`)
                 .join(', ');
 
+            const title = getLocalizedString(guild.id, 'aifilter_log_title');
+
             const embed = {
-                title: '🛡️ Content Moderation Triggered',
+                title: `🤖 ${title}`,
                 color: 0xFFAA00,
                 fields: [
                     { name: 'User', value: `**${message.author.tag}**`, inline: true },
