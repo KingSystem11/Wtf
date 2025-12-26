@@ -24,8 +24,25 @@ const config = {
     prefix: process.env.PREFIX || configData.prefix || 's!'
 };
 
+// ASCII Art
+const asciiArt = `
+\x1b[36m   _____                     _                 
+\x1b[36m  / ____|                   | |                
+\x1b[36m | (___  _ __   ___  ___| |_ _ __ ___      
+\x1b[36m  \\___ \\| '_ \\ / _ \\/ __| __| '__/ _ \\     
+\x1b[36m  ____) | |_) |  __/ (__| |_| | |  __/     
+\x1b[36m |_____/| .__/ \\___|\\___|\\__|_|  \\___|     
+\x1b[36m        | |                                
+\x1b[36m        |_|                                \x1b[0m
+
+\x1b[33m» Security & Moderation Discord Bot\x1b[0m
+\x1b[32m» Core Version: 2.0.0\x1b[0m
+\x1b[35m» Developed for Performance & Security\x1b[0m
+`;
+
 // Validation
 if (!config.token) {
+    console.log(asciiArt);
     console.error('[CRITICAL] DISCORD_TOKEN is missing! Please provide it in config.json or as an environment variable.');
     process.exit(1);
 }
@@ -38,6 +55,7 @@ if (!config.openAiKey) {
     console.warn('[WARNING] OPENAI_API_KEY is missing. AI features will be disabled.');
 }
 
+console.log(asciiArt);
 console.log(`[CONFIG] Loaded: Prefix="${config.prefix}", OwnerID="${config.ownerId ? 'SET' : 'MISSING'}", Token="${maskSecret(config.token)}"`);
 
 module.exports = config;
