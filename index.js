@@ -30,23 +30,40 @@ function runMigrations() {
             { name: 'verification_channel', type: 'TEXT DEFAULT NULL' },
             { name: 'globalban_enabled', type: 'INTEGER DEFAULT 0' },
             { name: 'anti_everyone', type: 'INTEGER DEFAULT 0' },
-            { name: 'language', type: 'TEXT DEFAULT "en"' }
+            { name: 'language', type: 'TEXT DEFAULT "en"' },
+            { name: 'verified_role_id', type: 'TEXT DEFAULT NULL' },
+            { name: 'ai_mode', type: 'TEXT DEFAULT "normal"' },
+            { name: 'punishment_pipeline', type: 'TEXT DEFAULT "warn,mute10,mute60,kick,ban"' },
+            { name: 'log_level', type: 'TEXT DEFAULT "normal"' },
+            { name: 'panic_mode', type: 'INTEGER DEFAULT 0' },
+            { name: 'prefix', type: 'TEXT DEFAULT "s!"' },
+            { name: 'log_channel', type: 'TEXT DEFAULT NULL' },
+            { name: 'antinuke', type: 'INTEGER DEFAULT 0' },
+            { name: 'aifilter', type: 'INTEGER DEFAULT 0' },
+            { name: 'antispam', type: 'INTEGER DEFAULT 0' },
+            { name: 'max_messages', type: 'INTEGER DEFAULT 8' },
+            { name: 'interval', type: 'INTEGER DEFAULT 5' },
+            { name: 'antilink', type: 'INTEGER DEFAULT 0' },
+            { name: 'antiraid', type: 'INTEGER DEFAULT 0' },
+            { name: 'max_joins', type: 'INTEGER DEFAULT 10' },
+            { name: 'antinuke_limit', type: 'INTEGER DEFAULT 3' },
+            { name: 'antinuke_window', type: 'INTEGER DEFAULT 30' }
         ];
 
         let addedCount = 0;
         for (const col of requiredColumns) {
             if (!columns.includes(col.name)) {
-                db.prepare(`ALTER TABLE guild_config ADD COLUMN ${col.name} ${col.type}`).run();
-                console.log(`[DB] Added missing column: ${col.name}`);
-                addedCount++;
+                try {
+                    db.prepare(`ALTER TABLE guild_config ADD COLUMN ${col.name} ${col.type}`).run();
+                    console.log(`[DB] Added missing column: ${col.name}`);
+                    addedCount++;
+                } catch (alterErr) {
+                    console.error(`[DB] Failed to add column ${col.name}:`, alterErr.message);
+                }
             }
         }
 
-        if (addedCount > 0) {
-            console.log(`[DB] Migration completed. Added ${addedCount} columns.`);
-        } else {
-            console.log('[DB] Database is up to date.');
-        }
+        console.log('[DB] DB migration OK');
     } catch (err) {
         console.error('[DB] Migration failed:', err);
     }
@@ -401,6 +418,9 @@ client.once('ready', async () => {
                 console.error('[SlashCommands] Failed to register commands:', err);
             }
         }
+        
+        console.log(`[LOADER] Loaded ${client.commands.size} prefix commands.`);
+        console.log(`[LOADER] Loaded ${client.slashCommands.size} slash commands.`);
     } catch (err) {
         console.error('Error in ready event:', err);
     }
@@ -560,24 +580,44 @@ client.on('guildMemberAdd', async member => {
     }
 });
 
-// Anti-Spam Tracking
-const messageLog = new Map();
-const { getGuildConfig, invalidateGuildConfig } = require('./utils/configCache');
-const { shouldDebounce } = require('./utils/debounce');
-
+// Main Message Handler
 client.on('messageCreate', async message => {
-    const prefix = config.prefix;
     if (message.author.bot || !message.guild) return;
 
-    const { getEffectiveSetting } = require('./utils/channeloverrides');
-    const { isWhitelisted, logWhitelistSkip } = require('./utils/whitelist');
-    const { trackBeastAction } = require('./utils/beast');
-    
-    // Get cached guild config (single DB query instead of multiple)
-    const guildConfig = getGuildConfig(message.guild.id);
-    if (!guildConfig) return;
+    const prefix = config.prefix;
+    if (!message.content.startsWith(prefix)) return;
 
-    // Check if heavy AI checks should be debounced
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const commandName = args.shift().toLowerCase();
+
+    const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+    if (!command) return;
+
+    try {
+        await command.execute(message, args, client);
+    } catch (error) {
+        console.error(`Error executing command ${commandName}:`, error);
+        message.reply('❌ An error occurred while executing this command.');
+    }
+});
+
+// Slash Command Handler
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const slashCommand = client.slashCommands.get(interaction.commandName);
+    if (!slashCommand) return;
+
+    try {
+        await slashCommand.execute(interaction);
+    } catch (error) {
+        console.error(`Error executing slash command ${interaction.commandName}:`, error);
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp({ content: '❌ An error occurred while executing this command.', ephemeral: true }).catch(() => {});
+        } else {
+            await interaction.reply({ content: '❌ An error occurred while executing this command.', ephemeral: true }).catch(() => {});
+        }
+    }
     const aiDebounceKey = `${message.guild.id}-${message.author.id}-aifilter`;
     const shouldSkipAI = shouldDebounce(aiDebounceKey);
     
