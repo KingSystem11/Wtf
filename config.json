@@ -1,8 +1,8 @@
 {
   "prefix": "s!",
-  "token": "MTMxNjQ0MjAzNDc1MTY2ODI0NQ.GaK1Tj.ZsARmK9O9OVR7sPOdnKtm5vL16LBCVP_vt57Rg",
-  "ownerId": "1113808268960206928",
-  "openAiKey": "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",
+  "token": "",
+  "ownerId": "",
+  "openAiKey": "",
   "colors": {
     "default": "#00FF00",
     "error": "#FF0000"
