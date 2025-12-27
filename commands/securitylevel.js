@@ -4,6 +4,7 @@ const db = new Database('./data/spectre.db');
 const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
+    category: "Security",
     name: 'securitylevel',
     description: 'Summarizes the security posture for the guild',
     async execute(message, args) {

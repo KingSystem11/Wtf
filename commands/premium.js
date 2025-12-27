@@ -4,6 +4,7 @@ const db = new Database('./data/spectre.db');
 const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
+    category: "Security",
     name: 'premium',
     description: 'Manage or view premium status',
     async execute(message, args) {

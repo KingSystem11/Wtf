@@ -5,6 +5,7 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Security",
     name: 'reload',
     description: 'Reloads a specific command file (Owner Only)',
     ownerOnly: true,

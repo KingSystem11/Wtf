@@ -3,6 +3,8 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Moderation",
+    category: "Security",
     name: 'unmute',
     description: 'Remove timeout from a member',
     async execute(message, args) {

@@ -4,6 +4,7 @@ const db = new Database('./data/spectre.db');
 const { getEmoji } = require('../utils/emojis');
 
 module.exports = {
+    category: "Security",
     name: 'checklist',
     description: 'Security checklist for guild owners',
     highRisk: true,

@@ -1,6 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
+    category: "Security",
     name: 'slowmode',
     description: 'Set channel slowmode',
     async execute(message, args) {

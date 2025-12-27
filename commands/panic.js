@@ -3,6 +3,8 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Security",
+    category: "Security",
     name: 'panic',
     description: 'Toggle global server panic mode',
     highRisk: true,

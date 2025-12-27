@@ -4,6 +4,8 @@ const db = new Database('./data/spectre.db');
 const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
+    category: "Security",
+    category: "Security",
     name: 'antilink',
     description: 'Configure link and invite protection',
     async execute(message, args) {

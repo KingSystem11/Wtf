@@ -1,108 +1,141 @@
-const { EmbedBuilder } = require('discord.js');
-const Database = require('better-sqlite3');
-const db = new Database('./data/spectre.db');
-const strings = require('../utils/strings');
-const { isStaff, isOwner } = require('../utils/permissions');
-const { getEmoji } = require('../helpers/emoji');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, ComponentType } = require('discord.js');
+const dbWrapper = require('../utils/db');
+const { isStaff, isOwner, canUseCommand } = require('../utils/permissions');
+const { getEmoji } = require('../utils/emojis');
+const config = require('../configLoader');
 
 module.exports = {
     name: 'help',
-    description: 'List all commands',
-    async execute(message, args, client) {
-        const dbWrapper = require('../utils/db');
-        const config = dbWrapper.query('SELECT staff_role_id, language FROM guild_config WHERE guild_id = ?', [message.guild.id]);
-        const lang = config?.language || 'en';
-        const langStrings = strings[lang] || strings.en;
-        
-        const memberIsStaff = isStaff(message.member, config);
-        const memberIsOwner = isOwner(message.member);
+    description: 'Displays the Spectre help menu',
+    aliases: ['h'],
+    category: 'Utility',
+    data: new SlashCommandBuilder()
+        .setName('help')
+        .setDescription('Displays the Spectre help menu')
+        .addStringOption(option =>
+            option.setName('category')
+                .setDescription('The category to view')
+                .addChoices(
+                    { name: 'Moderation', value: 'moderation' },
+                    { name: 'Security', value: 'security' },
+                    { name: 'AI / Premium', value: 'ai' },
+                    { name: 'Utility', value: 'utility' }
+                )),
 
-        const categories = {
-            'General': [
-                { name: 's!ping', desc: 'Check bot latency', staff: false },
-                { name: 's!help', desc: 'Show this menu', staff: false },
-                { name: 's!info', desc: 'Bot information', staff: false },
-                { name: 's!privacy', desc: 'Privacy information', staff: false }
-            ],
-            'Moderation': [
-                { name: 's!why', desc: 'Show your cases', staff: false },
-                { name: 's!ban', desc: 'Ban a member', staff: true },
-                { name: 's!kick', desc: 'Kick a member', staff: true },
-                { name: 's!mute', desc: 'Timeout a member', staff: true },
-                { name: 's!unmute', desc: 'Remove timeout', staff: true },
-                { name: 's!warn', desc: 'Warn a member', staff: true },
-                { name: 's!case', desc: 'View case details', staff: true }
-            ],
-            'Security': [
-                { name: 's!antinuke', desc: 'Configure anti-nuke', staff: true },
-                { name: 's!antiraid', desc: 'Configure anti-raid', staff: true },
-                { name: 's!antilink', desc: 'Configure anti-link', staff: true },
-                { name: 's!antispam', desc: 'Configure anti-spam', staff: true },
-                { name: 's!panic', desc: 'Emergency lockdown', staff: true },
-                { name: 's!spectrelockdown', desc: 'Ultimate lockdown', owner: true },
-                { name: 's!lock', desc: 'Lock channel', staff: true },
-                { name: 's!unlock', desc: 'Unlock channel', staff: true },
-                { name: 's!serverlock', desc: 'Lock server', staff: true },
-                { name: 's!slowmode', desc: 'Set slowmode', staff: true },
-                { name: 's!setlog', desc: 'Set log channel', staff: true },
-                { name: 's!setstaffrole', desc: 'Set staff role', staff: true },
-                { name: 's!loglevel', desc: 'Set log level', staff: true },
-                { name: 's!perms', desc: 'Show permissions', staff: false },
-                { name: 's!exportlogs', desc: 'Export logs to .txt', staff: true },
-                { name: 's!webhookscan', desc: 'Scan for webhooks', staff: true },
-                { name: 's!usage', desc: 'Check command usage', staff: true },
-                { name: 's!cleanup', desc: 'Prune old logs', staff: true },
-                { name: 's!securitylevel', desc: 'Check security posture', staff: true },
-                { name: 's!setupsecurity', desc: 'Interactive setup', staff: true },
-                { name: 's!verifyme', desc: 'Get verified role', staff: false },
-                { name: 's!setverifiedrole', desc: 'Set verified role', staff: true },
-                { name: 's!pipeline', desc: 'Escalating punishments', staff: true },
-                { name: 's!spectreconfig', desc: 'Show config', owner: true },
-                { name: 's!setlang', desc: 'Set language', staff: true },
-                { name: 's!reload', desc: 'Reload command', owner: true },
-                { name: 's!shutdown', desc: 'Bot shutdown', owner: true },
-                { name: 's!debugconfig', desc: 'Debug guild config', owner: true },
-                { name: 's!devstatus', desc: 'Dev mode status', owner: true },
-                { name: 's!sim', desc: 'Simulate events', owner: true },
-                { name: 's!genlicense', desc: 'Generate license', owner: true },
-                { name: 's!resetsecurity', desc: 'Reset security', owner: true },
-                { name: 's!resetall', desc: 'Factory reset', owner: true }
-            ],
-            'AI/Premium': [
-                { name: 's!activatelicense', desc: 'Activate premium', staff: false },
-                { name: 's!aifilter', desc: 'Toggle AI filter', staff: true, premium: true },
-                { name: 's!aimode', desc: 'Set AI sensitivity', staff: true, premium: true },
-                { name: 's!ailogs', desc: 'Show AI logs', staff: true, premium: true },
-                { name: 's!premium', desc: 'Premium status', staff: false },
-                { name: 's!backup', desc: 'Backup config', owner: true },
-                { name: 's!restore', desc: 'Restore config', owner: true }
-            ]
+    async execute(messageOrInteraction, args, client) {
+        const isSlash = !!messageOrInteraction.isChatInputCommand;
+        const guildId = messageOrInteraction.guildId || messageOrInteraction.guild.id;
+        const member = messageOrInteraction.member;
+        
+        const guildConfig = dbWrapper.query('SELECT staff_role_id, language FROM guild_config WHERE guild_id = ?', [guildId]);
+        const prefix = config.prefix;
+
+        const categoryInput = isSlash ? messageOrInteraction.options.getString('category') : args[0]?.toLowerCase();
+
+        // Manual mapping for commands without explicit category field
+        const getCategoryCommands = (categoryName) => {
+            return client.commands.filter(cmd => {
+                if (cmd.category && cmd.category.toLowerCase() === categoryName) return true;
+                
+                const modCmds = ['ban', 'kick', 'mute', 'unmute', 'warn', 'case', 'why'];
+                const secCmds = ['antinuke', 'antiraid', 'antilink', 'antispam', 'panic', 'spectrelockdown', 'lock', 'unlock', 'serverlock', 'slowmode', 'setlog', 'setstaffrole', 'loglevel', 'perms', 'exportlogs', 'webhookscan', 'usage', 'cleanup', 'securitylevel', 'setupsecurity', 'verifyme', 'setverifiedrole', 'pipeline', 'spectreconfig', 'setlang', 'reload', 'shutdown', 'debugconfig', 'devstatus', 'sim', 'genlicense', 'resetsecurity', 'resetall', 'preset', 'chanset', 'globalban', 'incident', 'jsonstatus', 'verify', 'verifysetup'];
+                const aiCmds = ['activatelicense', 'aifilter', 'aimode', 'ailogs', 'premium', 'backup', 'restore'];
+                const utilCmds = ['ping', 'help', 'info', 'privacy', 'debugping', 'describe', 'checklist', 'securitydocs', 'start'];
+
+                if (categoryName === 'moderation' && modCmds.includes(cmd.name)) return true;
+                if (categoryName === 'security' && secCmds.includes(cmd.name)) return true;
+                if (categoryName === 'ai' && aiCmds.includes(cmd.name)) return true;
+                if (categoryName === 'utility' && utilCmds.includes(cmd.name)) return true;
+                if (categoryName === 'owner' && (cmd.ownerOnly || cmd.devOnly)) return true;
+                return false;
+            });
         };
 
-        const helpEmbed = new EmbedBuilder()
-            .setTitle(`${getEmoji('INFO')} ${langStrings.help_title}`)
-            .setColor('#00FF00')
-            .setThumbnail(client.user.displayAvatarURL())
-            .setFooter({ text: langStrings.help_footer })
-            .setTimestamp();
+        const createMainEmbed = () => {
+            const embed = new EmbedBuilder()
+                .setTitle(`${getEmoji('INFO')} Spectre Help`)
+                .setDescription(`Welcome to **Spectre**, the ultimate security bot for your server.\n\n` +
+                    `Current Prefix: \`${prefix}\`\n` +
+                    `Use \`${prefix}describe <command>\` for detailed command info.`)
+                .setColor('#00FFAA')
+                .addFields(
+                    { name: `${getEmoji('MOD')} Moderation`, value: Array.from(getCategoryCommands('moderation').keys()).map(n => `\`${n}\``).join(', ') || 'No commands', inline: false },
+                    { name: `${getEmoji('SECURITY')} Security`, value: Array.from(getCategoryCommands('security').keys()).map(n => `\`${n}\``).join(', ') || 'No commands', inline: false },
+                    { name: `${getEmoji('AI')} AI / Premium`, value: Array.from(getCategoryCommands('ai').keys()).map(n => `\`${n}\``).join(', ') || 'No commands', inline: false },
+                    { name: `${getEmoji('SETTINGS')} Utility`, value: Array.from(getCategoryCommands('utility').keys()).map(n => `\`${n}\``).join(', ') || 'No commands', inline: false }
+                )
+                .setFooter({ text: `Developed for Performance & Security | Total Commands: ${client.commands.size}` })
+                .setTimestamp();
 
-        for (const [category, commands] of Object.entries(categories)) {
-            let cmdList = '';
-            for (const cmd of commands) {
-                // Permission checks
-                if (cmd.owner && !memberIsOwner) continue;
-                if (cmd.staff && !memberIsStaff) continue;
-
-                const premiumTag = cmd.premium ? ` ${getEmoji('PREMIUM')}` : '';
-                const aliasStr = cmd.aliases ? ` (aliases: \`${cmd.aliases.join(', ')}\`)` : '';
-                cmdList += `\`${cmd.name}\`${aliasStr} - ${cmd.desc}${premiumTag}\n`;
+            if (isOwner(member)) {
+                embed.addFields({ name: `${getEmoji('OWNER')} Owner / Dev`, value: Array.from(getCategoryCommands('owner').keys()).map(n => `\`${n}\``).join(', ') || 'No commands', inline: false });
             }
+            return embed;
+        };
 
-            if (cmdList) {
-                helpEmbed.addFields({ name: category, value: cmdList });
-            }
+        const createCategoryEmbed = (category) => {
+            const displayNames = {
+                moderation: { name: 'Moderation', emoji: 'MOD' },
+                security: { name: 'Security', emoji: 'SECURITY' },
+                ai: { name: 'AI / Premium', emoji: 'AI' },
+                utility: { name: 'Utility', emoji: 'SETTINGS' },
+                owner: { name: 'Owner / Dev', emoji: 'OWNER' }
+            };
+
+            const catInfo = displayNames[category] || { name: 'Commands', emoji: 'INFO' };
+            const cmds = getCategoryCommands(category);
+            const visibleCmds = Array.from(cmds.values()).filter(cmd => canUseCommand(member, cmd, guildConfig));
+
+            return new EmbedBuilder()
+                .setTitle(`${getEmoji(catInfo.emoji)} ${catInfo.name} Commands`)
+                .setColor('#00FFAA')
+                .setDescription(visibleCmds.map(cmd => `**${cmd.name}** – ${cmd.description || 'No description'}`).join('\n') || 'No commands available for you in this category.')
+                .setFooter({ text: `Use ${prefix}describe <command> for detailed info.` })
+                .setTimestamp();
+        };
+
+        const row = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId('help_mod').setLabel('Moderation').setEmoji(getEmoji('MOD')).setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('help_sec').setLabel('Security').setEmoji(getEmoji('SECURITY')).setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('help_ai').setLabel('AI / Premium').setEmoji(getEmoji('AI')).setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('help_util').setLabel('Utility').setEmoji(getEmoji('SETTINGS')).setStyle(ButtonStyle.Secondary)
+            );
+
+        if (categoryInput && ['moderation', 'security', 'ai', 'utility', 'owner'].includes(categoryInput)) {
+            const embed = createCategoryEmbed(categoryInput);
+            if (isSlash) return await messageOrInteraction.reply({ embeds: [embed] });
+            return await messageOrInteraction.reply({ embeds: [embed] });
         }
 
-        message.reply({ embeds: [helpEmbed] });
+        const initialEmbed = createMainEmbed();
+        const response = isSlash 
+            ? await messageOrInteraction.reply({ embeds: [initialEmbed], components: [row], fetchReply: true })
+            : await messageOrInteraction.reply({ embeds: [initialEmbed], components: [row] });
+
+        const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+
+        collector.on('collect', async i => {
+            if (i.user.id !== (isSlash ? messageOrInteraction.user.id : messageOrInteraction.author.id)) {
+                return i.reply({ content: "This menu is not for you.", ephemeral: true });
+            }
+
+            let category = '';
+            if (i.customId === 'help_mod') category = 'moderation';
+            if (i.customId === 'help_sec') category = 'security';
+            if (i.customId === 'help_ai') category = 'ai';
+            if (i.customId === 'help_util') category = 'utility';
+
+            const newEmbed = createCategoryEmbed(category);
+            await i.update({ embeds: [newEmbed] });
+        });
+
+        collector.on('end', () => {
+            const disabledRow = new ActionRowBuilder().addComponents(
+                row.components.map(button => ButtonBuilder.from(button).setDisabled(true))
+            );
+            if (isSlash) messageOrInteraction.editReply({ components: [disabledRow] }).catch(() => {});
+            else response.edit({ components: [disabledRow] }).catch(() => {});
+        });
     }
 };

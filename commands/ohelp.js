@@ -3,6 +3,7 @@ const { getEmoji } = require('../utils/emojis');
 const { canUseCommand } = require('../utils/permissions');
 
 module.exports = {
+    category: "Security",
     name: 'ohelp',
     description: 'Display global owner-only commands',
     category: 'Owner',

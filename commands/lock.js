@@ -1,6 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
+    category: "Security",
     name: 'lock',
     description: 'Lock the current channel',
     async execute(message) {

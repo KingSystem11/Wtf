@@ -6,6 +6,7 @@ const { canUseCommand, isOwner } = require('../utils/permissions');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Security",
     name: 'describe',
     description: 'Get detailed information about a command',
     async execute(message, args, client) {

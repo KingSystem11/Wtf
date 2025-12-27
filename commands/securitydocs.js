@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { getEmoji } = require('../utils/emojis');
 
 module.exports = {
+    category: "Security",
     name: 'securitydocs',
     description: 'Security features documentation',
     async execute(message, args) {

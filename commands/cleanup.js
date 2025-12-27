@@ -29,6 +29,7 @@ async function runCleanup(client, manual = false) {
 }
 
 module.exports = {
+    category: "Security",
     name: 'cleanup',
     description: 'Manually trigger a database and memory cleanup',
     async execute(message, args, client) {

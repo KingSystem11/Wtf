@@ -2,6 +2,7 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Security",
     name: 'verify',
     description: 'Submit your verification code',
     async execute(message, args) {

@@ -1,6 +1,8 @@
 const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
+    category: "Utility",
+    category: "Security",
     name: 'ping',
     description: 'Check bot latency',
     execute(message) {

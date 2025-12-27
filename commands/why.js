@@ -3,6 +3,7 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Security",
     name: 'why',
     description: 'Explains your recent punishments and actions taken by Spectre',
     async execute(message, args) {

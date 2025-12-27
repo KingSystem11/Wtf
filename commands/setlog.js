@@ -3,6 +3,7 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Security",
     name: 'setlog',
     description: 'Set the logging channel',
     async execute(message, args) {

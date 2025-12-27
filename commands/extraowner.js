@@ -3,6 +3,7 @@ const db = require('../utils/db');
 const { getEmoji } = require('../utils/emojis');
 
 module.exports = {
+    category: "Security",
     name: 'extraowner',
     description: 'Manage extra owners for this guild (Guild Owner Only)',
     highRisk: true,

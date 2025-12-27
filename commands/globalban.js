@@ -7,6 +7,7 @@ const db = new Database('./data/spectre.db');
 const BOT_OWNER_ID = process.env.BOT_OWNER_ID;
 
 module.exports = {
+    category: "Security",
     name: 'globalban',
     description: 'Manage global banlist across servers',
     async execute(message, args) {

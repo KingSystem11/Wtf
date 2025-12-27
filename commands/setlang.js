@@ -3,6 +3,7 @@ const db = new Database('./data/spectre.db');
 const strings = require('../utils/strings');
 
 module.exports = {
+    category: "Security",
     name: 'setlang',
     description: 'Set the bot language for this server',
     async execute(message, args) {

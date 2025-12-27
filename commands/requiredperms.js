@@ -2,6 +2,7 @@ const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const config = require('../config.json');
 
 module.exports = {
+    category: "Security",
     name: 'requiredperms',
     description: 'Displays the minimal required permissions and recommended server security settings (Owner Only)',
     ownerOnly: true,

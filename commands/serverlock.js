@@ -1,6 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
+    category: "Security",
     name: 'serverlock',
     description: 'Lock or unlock the entire server',
     async execute(message, args) {

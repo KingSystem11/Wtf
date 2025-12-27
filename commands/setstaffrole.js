@@ -3,6 +3,7 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Security",
     name: 'setstaffrole',
     description: 'Set the role allowed to use security commands',
     async execute(message, args) {

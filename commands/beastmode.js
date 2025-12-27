@@ -3,6 +3,7 @@ const db = require('../utils/db');
 const { getEmoji } = require('../utils/emojis');
 
 module.exports = {
+    category: "Security",
     name: 'beastmode',
     description: 'Manage Beast Mode protection (Premium Only)',
     async execute(message, args) {

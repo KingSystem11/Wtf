@@ -3,6 +3,7 @@ const { getEmoji } = require('../utils/emojis');
 const { getSlowCommands } = require('../utils/metrics');
 
 module.exports = {
+    category: "Security",
     name: 'slowcmds',
     description: 'Displays the last 20 slow commands (Owner Only)',
     category: 'Owner',

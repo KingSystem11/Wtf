@@ -4,6 +4,7 @@ const db = new Database('./data/spectre.db');
 const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
+    category: "Security",
     name: 'pipeline',
     description: 'Manage the escalating punishment pipeline',
     highRisk: true,

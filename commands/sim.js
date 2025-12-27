@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { logEvent } = require('../utils/logger');
 
 module.exports = {
+    category: "Security",
     name: 'sim',
     description: 'Simulates security events for testing (Owner Only)',
     ownerOnly: true,

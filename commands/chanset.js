@@ -2,6 +2,7 @@ const { PermissionFlagsBits } = require('discord.js');
 const { setChannelOverride, getChannelOverrides, resetChannelOverrides } = require('../utils/channeloverrides');
 
 module.exports = {
+    category: "Security",
     name: 'chanset',
     description: 'Set per-channel filter overrides',
     async execute(message, args) {

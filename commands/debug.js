@@ -3,6 +3,7 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Security",
     name: 'debug',
     description: 'Toggle per-guild debug mode (Server Owner Only)',
     premiumOnly: true,

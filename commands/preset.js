@@ -2,6 +2,7 @@ const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { applyPreset, getPresetList, PRESETS } = require('../utils/presets');
 
 module.exports = {
+    category: "Security",
     name: 'preset',
     description: 'Apply security presets to your server',
     highRisk: true,

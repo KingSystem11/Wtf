@@ -4,6 +4,8 @@ const db = new Database('./data/spectre.db');
 const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
+    category: "Security",
+    category: "Security",
     name: 'antinuke',
     aliases: ['an'],
     description: 'Configure executor-based anti-nuke protection',

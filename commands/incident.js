@@ -3,6 +3,7 @@ const { generateIncidentReport, formatIncidentEmbed } = require('../utils/incide
 const { getEmoji } = require('../utils/emojis');
 
 module.exports = {
+    category: "Security",
     name: 'incident',
     description: 'Generate incident report for a user',
     async execute(message, args) {

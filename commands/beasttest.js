@@ -3,6 +3,7 @@ const db = require('../utils/db');
 const { getEmoji } = require('../utils/emojis');
 
 module.exports = {
+    category: "Security",
     name: 'beasttest',
     description: 'Simulate a Beast Mode betrayal scenario (Owner Only)',
     async execute(message, args) {

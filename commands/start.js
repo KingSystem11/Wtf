@@ -4,6 +4,7 @@ const db = new Database('./data/spectre.db');
 const { getEmoji } = require('../utils/emojis');
 
 module.exports = {
+    category: "Security",
     name: 'start',
     description: 'Onboarding summary for server owners',
     async execute(message, args, client) {

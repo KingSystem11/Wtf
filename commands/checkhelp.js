@@ -55,6 +55,7 @@ function verifyCommandsInHelp(client) {
 }
 
 module.exports = {
+    category: "Security",
     name: 'checkhelp',
     description: 'Verify all commands are in help menu',
     ownerOnly: true,

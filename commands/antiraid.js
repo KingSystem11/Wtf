@@ -4,6 +4,8 @@ const db = new Database('./data/spectre.db');
 const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
+    category: "Security",
+    category: "Security",
     name: 'antiraid',
     aliases: ['ar'],
     description: 'Configure join raid protection',

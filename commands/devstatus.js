@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
+    category: "Security",
     name: 'devstatus',
     description: 'Shows the current development mode status (Owner Only)',
     ownerOnly: true,

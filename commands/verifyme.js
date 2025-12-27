@@ -2,6 +2,7 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Security",
     name: 'verifyme',
     description: 'Assigns the verified role to the user',
     async execute(message) {

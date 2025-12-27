@@ -6,6 +6,7 @@ const { getEmoji } = require('../utils/emojis');
 const activeWhitelistSessions = new Map();
 
 module.exports = {
+    category: "Security",
     name: 'whitelist',
     description: 'Manage whitelist entries using an interactive menu.',
     async execute(message, args) {

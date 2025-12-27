@@ -1,6 +1,8 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
+    category: "Utility",
+    category: "Security",
     name: 'debugping',
     description: 'A simple debug command to verify the bot is responding.',
     aliases: ['dp'],

@@ -3,6 +3,7 @@ const Database = require('better-sqlite3');
 const db = new Database('./data/spectre.db');
 
 module.exports = {
+    category: "Security",
     name: 'resetsecurity',
     description: 'Resets security settings to safe defaults (Owner Only)',
     ownerOnly: true,

@@ -4,6 +4,7 @@ const db = new Database('./data/spectre.db');
 const { getEmoji } = require('../helpers/emoji');
 
 module.exports = {
+    category: "Security",
     name: 'backup',
     description: 'Create a backup of server configuration (Owner Only)',
     ownerOnly: true,

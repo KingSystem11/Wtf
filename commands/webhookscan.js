@@ -1,6 +1,7 @@
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
+    category: "Security",
     name: 'webhookscan',
     description: 'Scans the server for all webhooks and highlights suspicious ones',
     async execute(message) {

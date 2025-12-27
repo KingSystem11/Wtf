@@ -1,6 +1,7 @@
 const { getGuildStatus } = require('../utils/status');
 
 module.exports = {
+    category: "Security",
     name: 'jsonstatus',
     description: 'Get JSON status summary (owner only)',
     async execute(message, args) {

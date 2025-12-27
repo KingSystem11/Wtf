@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
+    category: "Security",
     name: 'privacy',
     description: 'Information about how Spectre handles your data',
     async execute(message, args) {

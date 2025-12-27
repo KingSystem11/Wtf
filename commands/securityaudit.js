@@ -3,6 +3,7 @@ const db = require('../utils/db');
 const { getEmoji } = require('../utils/emojis');
 
 module.exports = {
+    category: "Security",
     name: 'securityaudit',
     description: 'Review extra owners and whitelist security events (Guild Owner/Extra Owner Only)',
     highRisk: true,
