@@ -29,7 +29,8 @@ function runMigrations() {
             { name: 'beast_limit_everyone', type: 'INTEGER DEFAULT 2' },
             { name: 'verification_channel', type: 'TEXT DEFAULT NULL' },
             { name: 'globalban_enabled', type: 'INTEGER DEFAULT 0' },
-            { name: 'anti_everyone', type: 'INTEGER DEFAULT 0' }
+            { name: 'anti_everyone', type: 'INTEGER DEFAULT 0' },
+            { name: 'language', type: 'TEXT DEFAULT "en"' }
         ];
 
         let addedCount = 0;
