@@ -68,7 +68,8 @@ module.exports = {
      * @returns {boolean} - Whether the member is owner
      */
     isOwner(member) {
+        if (!member) return false;
         const BOT_OWNER_ID = process.env.BOT_OWNER_ID;
-        return member.id === member.guild.ownerId || member.id === BOT_OWNER_ID;
+        return (member.guild && member.id === member.guild.ownerId) || member.id === BOT_OWNER_ID;
     },
 };
