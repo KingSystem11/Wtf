@@ -683,11 +683,11 @@ client.on('messageCreate', async message => {
                 let shouldDelete = hasInvite;
                 
                 if (urls && !shouldDelete) {
-                    const whitelist = db.prepare('SELECT domain FROM whitelist WHERE guild_id = ?').all(message.guild.id).map(r => r.domain.toLowerCase());
+                    const whitelist = dbWrapper.all('SELECT domain FROM whitelist WHERE guild_id = ?', [message.guild.id]).map(r => r.domain.toLowerCase());
                     for (const url of urls) {
                         try {
                             const domain = new URL(url).hostname.toLowerCase().replace('www.', '');
-                            if (!whitelist.includes(domain)) {
+                            if (whitelist.length > 0 && !whitelist.includes(domain)) {
                                 shouldDelete = true;
                                 break;
                             }
@@ -850,7 +850,7 @@ client.on('messageCreate', async message => {
         await command.execute(message, args, client);
         const duration = Date.now() - startTime;
         
-        const guildConfig = db.prepare('SELECT debug FROM guild_config WHERE guild_id = ?').get(message.guild.id);
+        const guildConfig = dbWrapper.query('SELECT debug FROM guild_config WHERE guild_id = ?', [message.guild.id]);
         if (guildConfig?.debug) {
             console.log(`[DEBUG] Guild: ${message.guild.id} | Command: s!${command.name} | Duration: ${duration}ms`);
         }
@@ -861,7 +861,7 @@ client.on('messageCreate', async message => {
         }
 
         // Track usage
-        db.prepare('INSERT INTO command_usage (guild_id, command_name, uses, last_used_at) VALUES (?, ?, 1, CURRENT_TIMESTAMP) ON CONFLICT(guild_id, command_name) DO UPDATE SET uses = uses + 1, last_used_at = CURRENT_TIMESTAMP').run(message.guild.id, command.name);
+        dbWrapper.run('INSERT INTO command_usage (guild_id, command_name, uses, last_used_at) VALUES (?, ?, 1, CURRENT_TIMESTAMP) ON CONFLICT(guild_id, command_name) DO UPDATE SET uses = uses + 1, last_used_at = CURRENT_TIMESTAMP', [message.guild.id, command.name]);
     } catch (error) {
         console.error('Command Execution Error:', error);
         message.reply({
